@@ -36,11 +36,8 @@ async def calculate_total_revenue(property_id: str, tenant_id: str) -> Dict[str,
     Aggregates revenue from database.
     """
     try:
-        # Import database pool
-        from app.core.database_pool import DatabasePool
-        
-        # Initialize pool if needed
-        db_pool = DatabasePool()
+        # Import global database pool
+        from app.core.database_pool import db_pool
         await db_pool.initialize()
         
         if db_pool.session_factory:
@@ -51,7 +48,7 @@ async def calculate_total_revenue(property_id: str, tenant_id: str) -> Dict[str,
                 query = text("""
                     SELECT 
                         property_id,
-                        SUM(total_amount) as total_revenue,
+                        ROUND(SUM(total_amount), 2) as total_revenue,
                         COUNT(*) as reservation_count
                     FROM reservations 
                     WHERE property_id = :property_id AND tenant_id = :tenant_id
@@ -69,7 +66,7 @@ async def calculate_total_revenue(property_id: str, tenant_id: str) -> Dict[str,
                     return {
                         "property_id": property_id,
                         "tenant_id": tenant_id,
-                        "total": str(total_revenue),
+                        "total": f"{total_revenue:.2f}",
                         "currency": "USD", 
                         "count": row.reservation_count
                     }
